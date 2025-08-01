@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import FeedbackWidget from '@/components/FeedbackWidget';
-import { CalendarIcon, Users, Trophy, Star, Award, MessageSquare, User, RefreshCw } from 'lucide-react';
+import { CalendarIcon, Users, Trophy, Star, Award } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SessionData {
@@ -53,17 +53,12 @@ export default function SessionDetails() {
   const [loading, setLoading] = useState(true);
   const [awardingTo, setAwardingTo] = useState<string | null>(null);
   const [pointsToAward, setPointsToAward] = useState<Record<string, number>>({});
-  const [feedback, setFeedback] = useState<any[]>([]);
-  const [loadingFeedback, setLoadingFeedback] = useState(false);
 
   useEffect(() => {
     if (sessionId) {
       fetchSessionDetails();
-      if (userSession?.user?.role === 'mentor') {
-        fetchFeedback();
-      }
     }
-  }, [sessionId, userSession]);
+  }, [sessionId]);
 
   const fetchSessionDetails = async () => {
     try {
@@ -79,23 +74,6 @@ export default function SessionDetails() {
       toast.error('Failed to load session details');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchFeedback = async () => {
-    setLoadingFeedback(true);
-    try {
-      const response = await fetch(`/api/feedback/${sessionId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setFeedback(data);
-      } else {
-        console.error('Failed to load feedback');
-      }
-    } catch (error) {
-      console.error('Failed to fetch feedback:', error);
-    } finally {
-      setLoadingFeedback(false);
     }
   };
 
@@ -363,88 +341,6 @@ export default function SessionDetails() {
                 ) : (
                   <div className="text-center py-8 text-gray-500">
                     No participants yet. Share the session link with students!
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Feedback Section (Mentor/Admin Only) */}
-          {isMentor && (
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center">
-                      <MessageSquare className="w-5 h-5 mr-2" />
-                      Session Feedback ({feedback.length})
-                    </CardTitle>
-                    <CardDescription>
-                      Anonymous and non-anonymous feedback from participants
-                    </CardDescription>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={fetchFeedback}
-                    disabled={loadingFeedback}
-                    className="ml-4"
-                  >
-                    <RefreshCw className={`w-4 h-4 ${loadingFeedback ? 'animate-spin' : ''}`} />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {loadingFeedback ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="animate-pulse p-4 border rounded-lg">
-                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : feedback.length > 0 ? (
-                  <div className="space-y-4">
-                    {feedback.map((item) => (
-                      <div key={item._id} className="p-4 border rounded-lg bg-gray-50">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center space-x-2">
-                            {item.anonymous ? (
-                              <>
-                                <User className="w-4 h-4 text-gray-500" />
-                                <span className="text-sm font-medium text-gray-600">Anonymous</span>
-                              </>
-                            ) : (
-                              <>
-                                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                  <span className="text-xs font-semibold text-blue-600">
-                                    {item.userId?.name?.charAt(0).toUpperCase() || 'U'}
-                                  </span>
-                                </div>
-                                <span className="text-sm font-medium text-gray-900">
-                                  {item.userId?.name || 'Unknown User'}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-500">
-                            {new Date(item.createdAt).toLocaleDateString()} at {' '}
-                            {new Date(item.createdAt).toLocaleTimeString([], { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 leading-relaxed">{item.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p className="text-lg font-medium mb-2">No feedback yet</p>
-                    <p className="text-sm">Participants can provide feedback about this session.</p>
                   </div>
                 )}
               </CardContent>
